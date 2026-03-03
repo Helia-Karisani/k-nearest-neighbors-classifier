@@ -21,7 +21,7 @@ Target label: `custcat` (4 classes)
 
 ## Dataset
 
-- Source: `teleCust1000t.csv`
+- Source: `teleCust1000t.csv` (IBM dataset)
 - Target column: `custcat`
 - Features: all other columns in the dataset (the notebook uses `X = df.drop('custcat', axis=1)`)
 
