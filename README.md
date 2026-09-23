@@ -1,14 +1,15 @@
 # Telecom Customer Segmentation (K-Nearest Neighbors Classifier)
 
-Classifies telecom customers into one of 4 service categories from demographic and service-usage features, using a K-Nearest Neighbors (KNN) classifier.
+Classify telecom customers into one of 4 service categories using demographic + service-usage features, using a K-Nearest Neighbors (KNN) classifier.
 
 ---
 
-## Problem
+## Project idea (problem statement)
 
-A telecom provider segments its customers into four groups based on service usage. Predicting a customer's group from demographic and service data lets the company personalize offers.
+A telecommunications provider segments its customer base into four groups based on service-usage patterns.  
+If we can predict a customer's group from demographic/service data, the company can personalize offers.
 
-This is a **supervised multi-class classification** task.
+This is a **supervised multi-class classification** task: given labeled examples, train a model to predict the class of a new (unknown) customer.
 
 Target label: `custcat` (4 classes)
 1. Basic Service
@@ -21,78 +22,119 @@ Target label: `custcat` (4 classes)
 ## Dataset
 
 - Source: `teleCust1000t.csv` (IBM dataset)
-- Target: `custcat`
-- Features: all other columns (`X = df.drop('custcat', axis=1)`)
+- Target column: `custcat`
+- Features: all other columns in the dataset (the notebook uses `X = df.drop('custcat', axis=1)`)
 
 ---
 
-## Model: K-Nearest Neighbors
+## Model: K-Nearest Neighbors (KNN)
 
-KNN is an instance-based (non-parametric) classifier. Training mostly means storing the data, and a new point is classified by the labels of its **k closest** training points.
+KNN is an instance-based (non-parametric) classifier:
+- “Training” mostly means **storing** the training data.
+- Prediction for a new point is based on the labels of the **k closest** training points.
 
-### Scaling
+### Why scaling is required
 
-KNN relies on distances, so features with large values (like income) would dominate binary flags. Features are standardized with `StandardScaler()`:
+KNN relies on distances. If features have different scales (e.g., income vs. binary flags), large-scale features dominate distances.
 
-`x_scaled = (x - mean) / std`
-
-### Math
-
-Euclidean distance:
-
-`d(x, xi) = sqrt( sum_j (x_j - xi_j)^2 )`
-
-Prediction: find the k nearest training points and take the most frequent class among them:
-
-`y_hat = argmax_c sum_{xi in Nk(x)} 1[ yi = c ]`
+This project uses **standardization**:
+- For each feature: x_scaled = (x - mean) / std
+- Implemented via `StandardScaler()`.
 
 ---
 
-## Workflow
+## Math (plain, inline)
+
+Let a customer be a feature vector x in R^d.
+
+**Distance (Euclidean):**  
+d(x, xi) = sqrt( sum_{j=1..d} (x_j - xi_j)^2 )
+
+**KNN prediction rule (classification):**
+1) Find Nk(x) = the set of k training points with smallest distance to x  
+2) Predict the most frequent class among them:
+
+y_hat = argmax_{c in {1,2,3,4}} sum_{xi in Nk(x)} 1[ yi = c ]
+
+(Ties depend on the library’s tie-breaking; scikit-learn resolves this deterministically.)
+
+---
+
+## What the notebook does (technical workflow)
 
 1. Load the dataset into a Pandas DataFrame.
-2. Check class distribution with `df['custcat'].value_counts()`.
-3. Split into `X` (all columns except `custcat`) and `y` (`custcat`).
-4. Standardize features with `StandardScaler`.
-5. Train/test split: 80/20, `random_state = 4`.
-6. Train a baseline KNN with k = 3.
-7. Evaluate accuracy on the test set.
-8. Sweep k = 1..10 (and a larger sweep up to 100) and pick the k with the best test accuracy.
+2. Quick sanity check / class distribution using `df['custcat'].value_counts()`.
+3. Split into:
+   - X = all columns except `custcat`
+   - y = `custcat`
+4. Normalize features with `StandardScaler`:
+   - X_norm = StandardScaler().fit_transform(X)
+5. Train/test split:
+   - 80% train, 20% test
+   - `random_state = 4`
+6. Train a baseline KNN model:
+   - Example: k = 3
+7. Evaluate on the test set using accuracy:
+   - accuracy = (# correct) / (# test samples)
+8. Hyperparameter sweep over k:
+   - k = 1..10 (and also a larger sweep up to 100 in the notebook)
+   - pick k with best test accuracy in the sweep
 
 ---
 
-## Result
+## Result (from the notebook run)
 
 - Best accuracy in the k = 1..10 sweep: **0.34**
-- Best k: **9**
+- Best k in that sweep: **k = 9**
 
-Accuracy is measured on the held-out test split.
+(Accuracy is reported on the held-out test split.)
 
 ---
 
-## Tech Stack
+## Tech stack
 
 - Python
 - NumPy, Pandas
 - scikit-learn
-- Matplotlib, Seaborn
+- Matplotlib
+- (Seaborn imported in the notebook)
 
 ---
 
-## How to Run
+## How to run
 
-```bash
-git clone https://github.com/Helia-Karisani/k-nearest-neighbors-classifier.git
-cd k-nearest-neighbors-classifier
-pip install numpy pandas scikit-learn matplotlib seaborn jupyter
-jupyter notebook k-nearest-neighbors-classifier.ipynb
-```
+1. Clone the repo:
+   - git clone <your-repo-url>
+   - cd <repo-folder>
+
+2. Create/activate an environment (example):
+   - python -m venv .venv
+   - source .venv/bin/activate  (macOS/Linux)
+   - .venv\Scripts\activate     (Windows)
+
+3. Install dependencies:
+   - pip install numpy pandas scikit-learn matplotlib seaborn jupyter
+
+4. Open the notebook:
+   - jupyter notebook
+
+5. Run all cells in:
+   - `k-nearest-neighbors-classifier.ipynb`
 
 ---
 
-## Possible Improvements
+## Repo structure (suggested)
 
-- Use cross-validation to choose k more reliably.
-- Try other distance metrics (Manhattan, Minkowski).
-- Report a confusion matrix and per-class precision/recall.
-- Compare with logistic regression, decision tree, and random forest.
+- `k-nearest-neighbors-classifier.ipynb`  -> main analysis + model training
+- `README.md`                              -> this file
+
+---
+
+## Notes / possible improvements
+
+- Use cross-validation (instead of a single train/test split) to select k more reliably.
+- Try alternative distance metrics (Manhattan, Minkowski) and compare.
+- Report confusion matrix + per-class precision/recall (accuracy alone can hide class imbalance effects).
+- Compare against simple baselines (logistic regression, decision tree, random forest).
+
+---
