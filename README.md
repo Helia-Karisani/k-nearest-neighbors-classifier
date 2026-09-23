@@ -123,7 +123,6 @@ y_hat = argmax_{c in {1,2,3,4}} sum_{xi in Nk(x)} 1[ yi = c ]
 
 ---
 
-## Repo structure (suggested)
 
 - `k-nearest-neighbors-classifier.ipynb`  -> main analysis + model training
 - `README.md`                              -> this file
